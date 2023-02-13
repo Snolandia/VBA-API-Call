@@ -1,0 +1,187 @@
+Sub Api_Call()
+    
+    'Used for JSON
+    'Microsoft XML must be referenced in order for this to work  :  Tools-> References->
+    
+    'This bit not required but helps speed up run time
+    Application.ScreenUpdating = False
+    Application.EnableEvents = False
+    Application.DisplayAlerts = False
+    
+    Dim base6 As String
+    Dim runtime As String
+    Dim calltime As String
+    Dim jsonheight, jsonwidth As Long
+    runtime = Now
+    
+    Dim json As String
+    Dim JsonObject As Object
+    Dim Jsonarray As Variant
+    Dim objHTTP As Object
+    
+    Set objHTTP = CreateObject("WinHttp.WinHttpRequest.5.1")
+    
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    '-----------------------------------------------------------------
+    'Modify these values to reflect your needs'
+    Url = "https://jsonplaceholder.typicode.com/todos/1"
+    
+    requirespassword = 0 'Change to 1 if you want to use a username and password
+    Username = "Snolandia"  'YourUserName
+    Password = "*********"  'YourPassword
+    objHTTP.setTimeouts 0, 0, 0, 0      'This how long it will interact with the API before giving up. 0 is supposed to be _
+    infinity but it isnt. Changing all numbers to -1 will be infinite, not recomended. This value is in miliseconds, i.e. 300,000 is 5 minutes.
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    calltime = Now 'Time the call is started
+    
+    objHTTP.Open "GET", Url, False
+    
+    If requirespassword = 1 Then 'Set Request header to username and password for basic auth requiring Base64 Encoding
+        objHTTP.SetRequestHeader "Authorization", "Basic " & Base64(Username & Password)
+    End If
+    
+    objHTTP.Send 'Sending
+    json = objHTTP.responseText 'Response from the api
+    
+    'At this point the file will most likely need to be parsed. At the bototm is a file parser. I have not tested it extensively, it has only been tested on Epicor's rest api _
+    results.
+    
+    'Uncomment out the following to parse the json and paste to a new sheet
+    '    Jsonarray = JsonParser(json) 'parses the Json
+    '    Dim sheetname As String
+    '    sheetname = "jresults" 'Name of sheet goes here
+    '    
+    '    For i = 1 To ThisWorkbook.Sheets.count 'Checks if sheet exists and adds it if it doesnt
+    '        If ThisWorkbook.Sheets(i).Name = sheetname Then
+    '            'This might be a good place to clear contents of the sheet if you need to, code included
+    '            ThisWorkbook.Sheets(sheetname).Cells.ClearContents
+    '            Exit For
+    '        End If
+    '        If i = ThisWorkbook.Sheets.count Then
+    '            ThisWorkbook.Sheets.Add.Name = sheetname
+    '        End If
+    '    Next i
+    '    
+    '    jsonheight = UBound(Jsonarray, 1) - LBound(Jsonarray, 1) + 1 'Determines height
+    '    jsonwidth = UBound(Jsonarray, 2) - LBound(Jsonarray, 2) + 1 'Determines width
+    '    ThisWorkbook.Sheets(sheetname).Range("A1").Resize(jsonheight, jsonwidth) = Jsonarray 'Adjusts range to size of array and pastes begining in top left of sheet
+    '-------------------------------------------------------------------------
+    
+    calltime = Format((DateDiff("s", calltime, Now)) / 86400, "hh:mm:ss")
+    
+    
+    
+    
+    Application.ScreenUpdating = True
+    Application.EnableEvents = True
+    Application.DisplayAlerts = True
+    
+    runtime = Format((DateDiff("s", runtime, Now)) / 86400, "hh:mm:ss")
+    
+    Debug.Print "------------------------------------------------------------"
+    Debug.Print "Finished at : " & Now
+    Debug.Print "Took this long to call : " & calltime
+    Debug.Print "Took this long to run : " & runtime
+    Debug.Print "////////////////////////////////////////////////////////////"
+
+
+End Sub
+
+
+Function Base64(text As String) As String
+
+    'This part is needed to encode the username and password into Base64 and allow "Basic" authorization.
+    'Microsoft XML must be referenced in order for this to work  :  Tools-> References->
+
+  Dim unitext() As Byte
+  unitext = StrConv(text, vbFromUnicode)
+
+  Dim ObjDom As MSXML2.DOMDocument
+  Dim ObjElement As MSXML2.IXMLDOMElement
+
+  Set ObjDom = New MSXML2.DOMDocument
+  Set ObjElement = ObjDom.createElement("b64")
+
+  ObjElement.DataType = "bin.base64"
+  ObjElement.nodeTypedValue = unitext
+  
+  Base64 = Replace(ObjElement.text, vbLf, "")
+
+  Set objNode = Nothing
+  Set objXML = Nothing
+  
+End Function
+
+Function JsonParser(json As String) As Variant
+    
+    Dim line, tempstring, secondstring As String
+    Dim i, jheight, jwidth, starter, length, start, leng As Long
+    Dim jsonparse As Variant
+    
+    starter = 1
+    length = 1
+    starter = (InStr(starter, json, "["))
+    starter = (InStr(starter, json, "{")) + 1
+    length = (InStr(starter, json, "},{")) - starter
+    line = Mid(json, starter, length)
+    tempstring = Chr(44) & Chr(34)
+    tempstring = Replace(line, tempstring, "")
+    
+    jheight = ((Len(json) - (Len(Replace(json, "{", "")))))
+    jwidth = ((Len(line) - Len(tempstring)) / 2)
+    
+    secondstring = Chr(34) & Chr(58)
+    tempstring = Chr(44) & Chr(34)
+    ReDim jsonparse(jheight, jwidth)
+    
+    line = Mid(json, starter, length)
+    
+    For i = 0 To jwidth
+        jsonparse(0, i) = Mid(line, 1, InStr(1, line, secondstring))
+        jsonparse(0, i) = Replace(jsonparse(0, i), Chr(34), "")
+        jsonparse(0, i) = Replace(jsonparse(0, i), vbCrLf, "")
+        jsonparse(0, i) = Replace(jsonparse(0, i), " ", "")
+        line = Right(line, Len(line) - InStr(1, line, tempstring))
+    Next i
+    
+    For i = 1 To jheight
+        
+        line = Mid(json, starter, length)
+        
+        starter = InStr(starter + 5, json, "},{") + 3
+        length = (InStr(starter + 5, json, "},{")) - starter
+        If length < 0 Then
+            length = (InStr(starter + 5, json, "}")) - starter
+        End If
+            For n = 0 To jwidth
+                start = (InStr(1, line, jsonparse(0, n)) + Len(jsonparse(o, n)))
+                If InStr(start, line, tempstring) > 0 Then
+                    leng = (InStr(start, line, tempstring)) - (InStr(1, line, jsonparse(0, n)) + Len(jsonparse(o, n)))
+                Else
+                    leng = (Len(line) - start)
+                End If
+                jsonparse(i, n) = Mid(line, start, leng)
+                jsonparse(i, n) = Replace(jsonparse(i, n), Chr(34), "")
+                jsonparse(i, n) = Right(jsonparse(i, n), Len(jsonparse(i, n)) - 1)
+                
+                If InStr(1, jsonparse(i, n), "T00:00:00") <> 0 Then 'Removes the time from the dates
+                    jsonparse(i, n) = Replace(jsonparse(i, n), "T00:00:00", "")
+                End If
+                
+                
+                If jsonparse(i, n) = "null" Then
+                    jsonparse(i, n) = ""
+                End If
+                If n = jwidth Then
+                    jsonparse(i, n) = Replace(jsonparse(i, n), vbCrLf, "")
+                End If
+            Next n
+    Next i
+    
+    JsonParser = jsonparse
+    'Stop
+    'Debug.Print "pause"
+    'Stop
+    
+End Function
