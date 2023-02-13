@@ -108,8 +108,8 @@ Function Base64(text As String) As String
   
   Base64 = Replace(ObjElement.text, vbLf, "")
 
-  Set objNode = Nothing
-  Set objXML = Nothing
+  Set ObjDom = Nothing
+  Set ObjElement = Nothing
   
 End Function
 
