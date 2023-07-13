@@ -38,7 +38,7 @@ Sub Api_Call()
     objHTTP.Open "GET", Url, False
     
     If requirespassword = 1 Then 'Set Request header to username and password for basic auth requiring Base64 Encoding
-        objHTTP.SetRequestHeader "Authorization", "Basic " & Base64(Username & Password)
+        objHTTP.SetRequestHeader "Authorization", "Basic " & Base64(Username & ":" & Password) //added the : for authoirization
     End If
     
     objHTTP.Send 'Sending
