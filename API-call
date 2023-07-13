@@ -30,7 +30,8 @@ Sub Api_Call()
     Username = "Snolandia"  'YourUserName
     Password = "*********"  'YourPassword
     objHTTP.setTimeouts 0, 0, 0, 0      'This how long it will interact with the API before giving up. 0 is supposed to be _
-    infinity but it isnt. Changing all numbers to -1 will be infinite, not recomended. This value is in miliseconds, i.e. 300,000 is 5 minutes.
+    infinity but it isnt. Changing all numbers to -1 will be infinite, not recomended. This value is in miliseconds, i.e. 300,000 is 5 minutes. _
+    oServerXMLHTTPRequest.setTimeouts(resolveTimeout, connectTimeout,   sendTimeout, receiveTimeout);  
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     calltime = Now 'Time the call is started
