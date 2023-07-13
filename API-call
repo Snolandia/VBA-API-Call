@@ -1,3 +1,4 @@
+Option Explicit
 Sub Api_Call()
     
     'Used for JSON
@@ -7,7 +8,10 @@ Sub Api_Call()
     Application.ScreenUpdating = False
     Application.EnableEvents = False
     Application.DisplayAlerts = False
-    
+
+    Dim Password As String 
+    Dim UserName As String
+
     Dim base6 As String
     Dim runtime As String
     Dim calltime As String
