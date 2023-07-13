@@ -12,6 +12,10 @@ Sub Api_Call()
     Dim Password As String 
     Dim UserName As String
 
+    Dim Url As String
+    Dim requirespassword As Integer
+    Dim i As Integer
+
     Dim base6 As String
     Dim runtime As String
     Dim calltime As String
@@ -121,7 +125,7 @@ End Function
 Function JsonParser(json As String) As Variant
     
     Dim line, tempstring, secondstring As String
-    Dim i, jheight, jwidth, starter, length, start, leng As Long
+    Dim i, jheight, jwidth, starter, length, start, leng, n, o As Long
     Dim jsonparse As Variant
     
     starter = 1
